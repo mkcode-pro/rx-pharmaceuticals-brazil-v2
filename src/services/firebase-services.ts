@@ -52,239 +52,293 @@ const safeFirebaseCall = async (operation: () => Promise<any>) => {
 // Products Service
 export const productService = {
   async getAll() {
-    const querySnapshot = await getDocs(collection(db, "products"));
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Product[];
+    return await safeFirebaseCall(async () => {
+      const querySnapshot = await getDocs(collection(db, "products"));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Product[];
+    }) || [];
   },
 
   async getById(id: string) {
-    const docRef = doc(db, "products", id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Product;
-    }
-    return null;
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "products", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Product;
+      }
+      return null;
+    });
   },
 
   async create(product: Omit<Product, "id">) {
-    const docRef = await addDoc(collection(db, "products"), {
-      ...product,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = await addDoc(collection(db, "products"), {
+        ...product,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      return docRef.id;
     });
-    return docRef.id;
   },
 
   async update(id: string, product: Partial<Product>) {
-    const docRef = doc(db, "products", id);
-    await updateDoc(docRef, {
-      ...product,
-      updatedAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "products", id);
+      await updateDoc(docRef, {
+        ...product,
+        updatedAt: Timestamp.now()
+      });
     });
   },
 
   async delete(id: string) {
-    await deleteDoc(doc(db, "products", id));
+    return await safeFirebaseCall(async () => {
+      await deleteDoc(doc(db, "products", id));
+    });
   }
 };
 
 // Categories Service
 export const categoryService = {
   async getAll() {
-    const querySnapshot = await getDocs(collection(db, "categories"));
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    return await safeFirebaseCall(async () => {
+      const querySnapshot = await getDocs(collection(db, "categories"));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }) || [];
   },
 
   async create(category: any) {
-    const docRef = await addDoc(collection(db, "categories"), {
-      ...category,
-      createdAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = await addDoc(collection(db, "categories"), {
+        ...category,
+        createdAt: Timestamp.now()
+      });
+      return docRef.id;
     });
-    return docRef.id;
   },
 
   async update(id: string, category: any) {
-    const docRef = doc(db, "categories", id);
-    await updateDoc(docRef, {
-      ...category,
-      updatedAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "categories", id);
+      await updateDoc(docRef, {
+        ...category,
+        updatedAt: Timestamp.now()
+      });
     });
   },
 
   async delete(id: string) {
-    await deleteDoc(doc(db, "categories", id));
+    return await safeFirebaseCall(async () => {
+      await deleteDoc(doc(db, "categories", id));
+    });
   }
 };
 
 // Orders Service
 export const orderService = {
   async getAll() {
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    return await safeFirebaseCall(async () => {
+      const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }) || [];
   },
 
   async getById(id: string) {
-    const docRef = doc(db, "orders", id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() };
-    }
-    return null;
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "orders", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+      }
+      return null;
+    });
   },
 
   async updateStatus(id: string, status: string) {
-    const docRef = doc(db, "orders", id);
-    await updateDoc(docRef, {
-      status,
-      updatedAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "orders", id);
+      await updateDoc(docRef, {
+        status,
+        updatedAt: Timestamp.now()
+      });
     });
   },
 
   async create(order: any) {
-    const docRef = await addDoc(collection(db, "orders"), {
-      ...order,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = await addDoc(collection(db, "orders"), {
+        ...order,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+      return docRef.id;
     });
-    return docRef.id;
   }
 };
 
 // Storage Service for Images
 export const storageService = {
   async uploadProductImage(file: File, productId: string) {
-    const storageRef = ref(storage, `products/${productId}/${file.name}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
+    return await safeFirebaseCall(async () => {
+      const storageRef = ref(storage, `products/${productId}/${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    });
   },
 
   async deleteProductImage(imageUrl: string) {
-    try {
+    return await safeFirebaseCall(async () => {
       const imageRef = ref(storage, imageUrl);
       await deleteObject(imageRef);
-    } catch (error) {
-      console.error("Error deleting image:", error);
-    }
+    });
   }
 };
 
 // Analytics Service
 export const analyticsService = {
   async getDashboardStats() {
-    // Get today's orders
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    return await safeFirebaseCall(async () => {
+      // Get today's orders
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    const ordersQuery = query(
-      collection(db, "orders"),
-      where("createdAt", ">=", Timestamp.fromDate(today))
-    );
-    const todayOrders = await getDocs(ordersQuery);
+      const ordersQuery = query(
+        collection(db, "orders"),
+        where("createdAt", ">=", Timestamp.fromDate(today))
+      );
+      const todayOrders = await getDocs(ordersQuery);
 
-    // Get total products
-    const products = await getDocs(collection(db, "products"));
+      // Get total products
+      const products = await getDocs(collection(db, "products"));
 
-    // Get total categories
-    const categories = await getDocs(collection(db, "categories"));
+      // Get total categories
+      const categories = await getDocs(collection(db, "categories"));
 
-    // Calculate revenue (mock for now)
-    let todayRevenue = 0;
-    todayOrders.docs.forEach(doc => {
-      const order = doc.data();
-      todayRevenue += order.total || 0;
-    });
+      // Calculate revenue (mock for now)
+      let todayRevenue = 0;
+      todayOrders.docs.forEach(doc => {
+        const order = doc.data();
+        todayRevenue += order.total || 0;
+      });
 
-    return {
-      totalProducts: products.size,
-      totalCategories: categories.size,
-      todayOrders: todayOrders.size,
-      todayRevenue,
-      totalOrders: (await getDocs(collection(db, "orders"))).size
+      return {
+        totalProducts: products.size,
+        totalCategories: categories.size,
+        todayOrders: todayOrders.size,
+        todayRevenue,
+        totalOrders: (await getDocs(collection(db, "orders"))).size
+      };
+    }) || {
+      totalProducts: 0,
+      totalCategories: 0,
+      todayOrders: 0,
+      todayRevenue: 0,
+      totalOrders: 0
     };
   },
 
   async getTopProducts(limit: number = 5) {
-    // This would normally aggregate from orders
-    const products = await productService.getAll();
-    return products.slice(0, limit);
+    return await safeFirebaseCall(async () => {
+      // This would normally aggregate from orders
+      const products = await productService.getAll();
+      return products.slice(0, limit);
+    }) || [];
   },
 
   async getRecentOrders(maxResults: number = 10) {
-    const q = query(
-      collection(db, "orders"),
-      orderBy("createdAt", "desc"),
-      limit(maxResults)
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    return await safeFirebaseCall(async () => {
+      const q = query(
+        collection(db, "orders"),
+        orderBy("createdAt", "desc"),
+        limit(maxResults)
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }) || [];
   }
 };
 
 // Coupons Service
 export const couponService = {
   async getAll() {
-    const querySnapshot = await getDocs(collection(db, "coupons"));
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Coupon[];
+    return await safeFirebaseCall(async () => {
+      const querySnapshot = await getDocs(collection(db, "coupons"));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Coupon[];
+    }) || [];
   },
 
   async create(coupon: any) {
-    const docRef = await addDoc(collection(db, "coupons"), {
-      ...coupon,
-      createdAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = await addDoc(collection(db, "coupons"), {
+        ...coupon,
+        createdAt: Timestamp.now()
+      });
+      return docRef.id;
     });
-    return docRef.id;
   },
 
   async update(id: string, coupon: any) {
-    const docRef = doc(db, "coupons", id);
-    await updateDoc(docRef, coupon);
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "coupons", id);
+      await updateDoc(docRef, coupon);
+    });
   },
 
   async delete(id: string) {
-    await deleteDoc(doc(db, "coupons", id));
+    return await safeFirebaseCall(async () => {
+      await deleteDoc(doc(db, "coupons", id));
+    });
   }
 };
 
 // Shipping Service
 export const shippingService = {
   async getAll() {
-    const querySnapshot = await getDocs(collection(db, "shipping"));
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    return await safeFirebaseCall(async () => {
+      const querySnapshot = await getDocs(collection(db, "shipping"));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }) || [];
   },
 
   async create(shipping: any) {
-    const docRef = await addDoc(collection(db, "shipping"), {
-      ...shipping,
-      createdAt: Timestamp.now()
+    return await safeFirebaseCall(async () => {
+      const docRef = await addDoc(collection(db, "shipping"), {
+        ...shipping,
+        createdAt: Timestamp.now()
+      });
+      return docRef.id;
     });
-    return docRef.id;
   },
 
   async update(id: string, shipping: any) {
-    const docRef = doc(db, "shipping", id);
-    await updateDoc(docRef, shipping);
+    return await safeFirebaseCall(async () => {
+      const docRef = doc(db, "shipping", id);
+      await updateDoc(docRef, shipping);
+    });
   },
 
   async delete(id: string) {
-    await deleteDoc(doc(db, "shipping", id));
+    return await safeFirebaseCall(async () => {
+      await deleteDoc(doc(db, "shipping", id));
+    });
   }
 };
