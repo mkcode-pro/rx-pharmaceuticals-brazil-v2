@@ -21,6 +21,24 @@ import {
 import { db, storage } from "@/lib/firebase";
 import { Product, Coupon } from "@/types";
 
+// Add error handling wrapper for all Firebase operations
+const handleFirebaseError = (error: any) => {
+  console.warn('Firebase operation failed, using offline mode:', error.message);
+  return null;
+};
+
+// Wrap Firebase calls with error handling
+const safeFirebaseCall = async (operation: () => Promise<any>) => {
+  try {
+    return await operation();
+  } catch (error: any) {
+    if (error.code === 'unavailable' || error.message.includes('No connection established')) {
+      return handleFirebaseError(error);
+    }
+    throw error;
+  }
+};
+
 // Products Service
 export const productService = {
   async getAll() {

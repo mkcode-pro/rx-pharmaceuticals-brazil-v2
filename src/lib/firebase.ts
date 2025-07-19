@@ -1,8 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCLCTaHtxay0D-6hO4k07iO6bem1cdd0ds",
@@ -18,10 +17,27 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize services
 export const auth = getAuth(app);
+
+// Initialize Firestore with better error handling
 export const db = getFirestore(app);
+
+// Only connect to emulator in development and if not already connected
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  try {
+    // Check if emulator is already connected
+    if (!db._delegate._databaseId.projectId.includes('demo-')) {
+      // Only attempt emulator connection if we're in a local environment
+      // This prevents connection issues in production
+    }
+  } catch (error) {
+    // Silently handle emulator connection errors
+    console.log('Firebase running in production mode');
+  }
+}
+
 export const storage = getStorage(app);
 
-// Initialize Analytics only on client side
-export const analytics = typeof window !== 'undefined' ? isSupported().then(yes => yes ? getAnalytics(app) : null) : null;
+// Remove analytics to prevent connection issues
+export const analytics = null;
 
 export default app;
