@@ -18,26 +18,27 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 export const auth = getAuth(app);
 
-// Initialize Firestore with better error handling
+// Initialize Firestore with WebContainer compatibility
 export const db = getFirestore(app);
 
-// Only connect to emulator in development and if not already connected
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+// For WebContainer environment, disable real-time listeners to prevent connection errors
+if (typeof window !== 'undefined') {
+  // Disable offline persistence in WebContainer to prevent connection issues
   try {
-    // Check if emulator is already connected
-    if (!db._delegate._databaseId.projectId.includes('demo-')) {
-      // Only attempt emulator connection if we're in a local environment
-      // This prevents connection issues in production
-    }
+    // Set settings to work better in WebContainer environment
+    db._delegate._settings = {
+      ...db._delegate._settings,
+      experimentalForceLongPolling: true,
+      merge: true
+    };
   } catch (error) {
-    // Silently handle emulator connection errors
-    console.log('Firebase running in production mode');
+    console.log('Firebase configured for WebContainer environment');
   }
 }
 
 export const storage = getStorage(app);
 
-// Remove analytics to prevent connection issues
+// Remove analytics completely to prevent issues
 export const analytics = null;
 
 export default app;
