@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -18,23 +18,8 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 export const auth = getAuth(app);
 
-// Initialize Firestore with WebContainer compatibility
+// Initialize Firestore with proper settings for WebContainer environment
 export const db = getFirestore(app);
-
-// For WebContainer environment, disable real-time listeners to prevent connection errors
-if (typeof window !== 'undefined') {
-  // Disable offline persistence in WebContainer to prevent connection issues
-  try {
-    // Set settings to work better in WebContainer environment
-    db._delegate._settings = {
-      ...db._delegate._settings,
-      experimentalForceLongPolling: true,
-      merge: true
-    };
-  } catch (error) {
-    console.log('Firebase configured for WebContainer environment');
-  }
-}
 
 export const storage = getStorage(app);
 
