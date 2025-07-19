@@ -21,6 +21,16 @@ import {
 import { db, storage } from "@/lib/firebase";
 import { Product, Coupon } from "@/types";
 
+// Helper function to handle Firebase operations safely in WebContainer
+const safeFirebaseOperation = async <T>(operation: () => Promise<T>, fallback: T): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    console.warn('Firebase operation failed, using fallback:', error);
+    return fallback;
+  }
+};
+
 // Add error handling wrapper for all Firebase operations
 const handleFirebaseError = (error: any) => {
   console.warn('Firebase operation failed, using offline mode:', error.message);
